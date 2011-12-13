@@ -22,10 +22,14 @@ MAX_WIDTH = getattr(settings, "OEMBED_MAX_WIDTH", 320)
 MAX_HEIGHT = getattr(settings, "OEMBED_MAX_HEIGHT", 240)
 FORMAT = getattr(settings, "OEMBED_FORMAT", "json")
 
+
 def fetch(url, user_agent="django-oembed/0.1"):
     """
     Fetches from a URL, respecting GZip encoding, etc.
     """
+    fetch.count += 1
+    logger.debug("Fetching (%s): %s" % (fetch.count, url))
+    
     request = urllib2.Request(url)
     request.add_header('User-Agent', user_agent)
     request.add_header('Accept-Encoding', 'gzip')
@@ -36,6 +40,9 @@ def fetch(url, user_agent="django-oembed/0.1"):
         result = gzip.GzipFile(fileobj=StringIO(result)).read()
     f.close()
     return result
+
+fetch.count = 0
+
 
 def re_parts(regex_list, text):
     """
@@ -111,7 +118,7 @@ def replace(text, max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
     dictionary representation of the response.
     """
     rules = list(ProviderRule.objects.all())
-    patterns = [re.compile(r.regex) for r in rules] # Compiled patterns from the rules
+    patterns = [re.compile(r'[\'"=]?' + r.regex) for r in rules] # Compiled patterns from the rules 
     parts = [] # The parts that we will assemble into the final return value.
     indices = [] # List of indices of parts that need to be replaced with OEmbed stuff.
     indices_rules = [] # List of indices into the rules in order for which index was gotten by.
@@ -120,7 +127,10 @@ def replace(text, max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
     index = 0
     # First we pass through the text, populating our data structures.
     for i, part in re_parts(patterns, text):
-        if i == -1:
+        # if it starts with a quote or equals sign we're going to assume it's 
+        # inside an html tag attribute which means it doesn't need to get 
+        # re-embedded
+        if i == -1 or part[0] in ('"', "'", "="):
             parts.append(part)
             index += 1
         else:
