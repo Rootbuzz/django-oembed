@@ -137,10 +137,12 @@ def replace(text, max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
             if to_append:
                 parts.append(to_append)
                 index += 1
+                
     # Now we fetch a list of all stored patterns, and put it in a dictionary 
     # mapping the URL to to the stored model instance.
     for stored_embed in StoredOEmbed.objects.filter(match__in=urls, max_width=max_width, max_height = max_height):
         stored[stored_embed.match] = stored_embed
+    
     # Now we're going to do the actual replacement of URL to embed.
     for i, id_to_replace in enumerate(indices):
         rule = rules[indices_rules[i]]
@@ -182,5 +184,6 @@ def replace(text, max_width=MAX_WIDTH, max_height=MAX_HEIGHT):
                 parts[id_to_replace] = part
             except urllib2.HTTPError:
                 parts[id_to_replace] = part
+                
     # Combine the list into one string and return it.
     return mark_safe(u''.join(parts))

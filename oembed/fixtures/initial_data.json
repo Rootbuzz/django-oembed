@@ -146,7 +146,17 @@
             "regex": "http://(?:www\\.)?scribd\\.com/.*",                                                                                  
             "endpoint": "http://www.scribd.com/services/oembed",                                                                           
             "name": "Scribd",                                                                                                              
-            "format": 1                                                                                                                    
+            "format": 1
      	}       
+    },
+    {                                                                                                                                      
+        "pk": 17,                                                                                                                          
+        "model": "oembed.providerrule",                                                                                                    
+        "fields": {                                                                                                                        
+            "regex": "http://youtu\\.be/\\S*",
+            "endpoint": "http://www.youtube.com/oembed",                                                                           
+            "name": "Youtube (youtu.be)",                                                                                                              
+            "format": 1
+      }       
     }
 ]
