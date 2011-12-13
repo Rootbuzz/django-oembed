@@ -1,87 +1,94 @@
 from django.test import TestCase
-from django.template.defaultfilters import safe
 from oembed.core import replace, fetch
-from oembed.models import StoredOEmbed, ProviderRule
 
 class OEmbedTests(TestCase):
-    end = ur"There is this great video at %s"
-    start = ur"%s is a video that I like."
-    middle = ur"There is a movie here: %s and I really like it."
-    trailing_comma = ur"This is great %s, but it might not work."
-    trailing_period = ur"I like this video, located at %s."
-    
     noembeds = (
         ur"This is text that should not match any regex.",
         u'<img src="http://i243.photobucket.com/albums/ff105/Kiyoko_Otani/Mokona.jpg" border="0" alt="MOKONA! Pictures, Images and Photos">',
         u'<a rel="nofollow" href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/alleXsumi.jpg"><img width="240" height="320" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/alleXsumi.jpg"></a>',
         u'blah blah <a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group_best2.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group_best2.jpg" /></a> blah',
-        u'''
-            <p>If anyone went to AnimeNEXT 09, then maybe you saw four Season 1 Gundam 00 Meisters in a group wandering around together. This was a group that I organized and kept everyone accounted for. I'm thankful to have had such dedicated people making my first serious cosplay experience an enjoyable one. If you didn't see us this year, then look for us next year hopefully. 
-            </p>
-            <p>For the record, these pics were taken from other Gundam cosplayers, not using my camera. I also really want to find the shot taken of Tieria and Lockon kissing. XD For now, enjoy the pics and the awesomeness thereof!
-            </p>
-            <ul>
-             <li>
-                 Setsuna F. Seiei (red scarf): Nina (ALEX)
-             </li>
-            
-             <li>
-                 Allelujah Haptism/Hallelujah: KOU (my illustrator)
-             </li>
-            
-             <li>
-                 Tieria Erde: Sasha
-             </li>
-            
-             <li>
-                 Lockon Stratos: jim
-             </li>
-            </ul>
-            <p><a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group_best2.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group_best2.jpg" /></a> <a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/setsunashot.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/setsunashot.jpg" /></a>
-            </p>
-            <p><a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/alleXsumi.jpg"><img width="240" height="320" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/alleXsumi.jpg" /></a> <a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group.jpg" /></a>
-            </p>
-            <p><a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group2.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group2.jpg" /></a> <a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group3.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group3.jpg" /></a>
-            </p>
-            <p><a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group4.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group4.jpg" /></a> <a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group5.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group5.jpg" /></a>
-            </p>
-            <p><a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group6.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group6.jpg" /></a> <a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group_best.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam00group_best.jpg" /></a>
-            </p>
-            <p><a href="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam_cosplay_shoot_best.jpg"><img width="320" height="240" style="border:1px solid #000000;" src="http://img.photobucket.com/albums/v195/Alexiel-sama/AnimeNEXT09/gundam_cosplay_shoot_best.jpg" /></a> 
-            </p>
-            <p>By the way, if anyone can recommend how to go about washing my outfit, I'd love to know so I don't shrink/ruin it orz.
-            </p>
-        '''
     )
-    embeds = (
-        (u"http://www.viddler.com/explore/SYSTM/videos/49/", u'<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="320" height="222" id="viddlerplayer-e5cb3aac"><param name="movie" value="http://www.viddler.com/player/e5cb3aac/" /><param name="allowScriptAccess" value="always" /><param name="wmode" value="transparent" /><param name="allowFullScreen" value="true" /><embed src="http://www.viddler.com/player/e5cb3aac/" width="320" height="222" type="application/x-shockwave-flash" wmode="transparent" allowScriptAccess="always" allowFullScreen="true" name="viddlerplayer-e5cb3aac" ></embed></object>'),
-        (u"http://www.flickr.com/photos/33312563@N05/3510704966/", u'<img src="http://farm4.staticflickr.com/3641/3510704966_45cccdd80c_m.jpg" alt="9"></img>'),
-    )
-    
-    def testNoEmbed(self):        
+    end = ur"There is this great video at %s"
+    start = ur"%s is a video that I like."
+    middle = ur"There is a movie here: %s and I really like it."
+    trailing_comma = ur"This is great %s, but it might not work."
+    trailing_period = ur"I like this video, located at %s."
+
+    locs = [u"http://www.viddler.com/explore/SYSTM/videos/49/",
+            u"http://www.slideshare.net/hues/easter-plants",
+            u"http://www.scribd.com/doc/28452730/Easter-Cards",
+            u"http://screenr.com/gzS",
+            u"http://www.5min.com/Video/How-to-Decorate-Easter-Eggs-with-Decoupage-142076462",
+            u"http://www.howcast.com/videos/328008-How-To-Marble-Easter-Eggs",
+            u"http://my.opera.com/nirvanka/albums/showpic.dml?album=519866&picture=7173711",
+            u"http://img20.yfrog.com/i/dy6.jpg/",
+            u"http://tweetphoto.com/8069529",
+            u"http://www.flickr.com/photos/jaimewalsh/4489497178/",
+            u"http://twitpic.com/1cm8us",
+            u"http://imgur.com/6pLoN",
+            u"http://twitgoo.com/1p94",
+            u"http://www.23hq.com/Greetingdesignstudio/photo/5464607",
+            u"http://www.youtube.com/watch?v=Zk7dDekYej0",
+            u"http://www.veoh.com/browse/videos/category/educational/watch/v7054535EZGFJqyX",
+            u"http://www.justin.tv/venom24",
+            u"http://qik.com/video/1445889",
+            u"http://revision3.com/diggnation/2005-10-06",
+            u"http://www.dailymotion.com/video/xcss6b_big-cat-easter_animals",
+            u"http://www.collegehumor.com/video:1682246",
+            u"http://www.twitvid.com/BC0BA",
+            u"http://www.break.com/usercontent/2006/11/18/the-evil-easter-bunny-184789",
+            u"http://vids.myspace.com/index.cfm?fuseaction=vids.individual&videoid=103920940",
+            u"http://www.metacafe.com/watch/2372088/easter_eggs/",
+            u"http://blip.tv/file/770127",
+            u"http://video.google.com/videoplay?docid=2320995867449957036",
+            u"http://www.revver.com/video/1574939/easter-bunny-house/",
+            u"http://video.yahoo.com/watch/4530253/12135472",
+            u"http://www.viddler.com/explore/cheezburger/videos/379/",
+            u"http://www.liveleak.com/view?i=d91_1239548947",
+            u"http://www.hulu.com/watch/23349/nova-secrets-of-lost-empires-ii-easter-island",
+            u"http://movieclips.com/watch/jaws_1975/youre_gonna_need_a_bigger_boat/",
+            u"http://crackle.com/c/How_To/How_to_Make_Ukraine_Easter_Eggs/2262274",
+            u"http://www.fancast.com/tv/Saturday-Night-Live/10009/1083396482/Easter-Album/videos",
+            u"http://www.funnyordie.com/videos/040dac4eff/easter-eggs",
+            u"http://vimeo.com/10429123",
+            u"http://www.ted.com/talks/robert_ballard_on_exploring_the_oceans.html",
+            u"http://www.thedailyshow.com/watch/tue-february-29-2000/headlines---leap-impact",
+            u"http://www.colbertnation.com/the-colbert-report-videos/181772/march-28-2006/intro---3-28-06",
+            u"http://www.traileraddict.com/trailer/easter-parade/trailer",
+            u"http://www.lala.com/#album/432627041169206995/Rihanna/Rated_R",
+            u"http://www.amazon.com/gp/product/B001EJMS6K/ref=s9_simh_gw_p200_i1?pf_rd_m=ATVPDKIKX0DER",
+            u"http://animoto.com/s/oH9VwgjOU9hpbgYXNDwLNQ",
+            u"http://xkcd.com/726/"]
+
+    def get_oembed(self, url):
+        try:
+            return replace('%s' % url)
+        except Exception, e:
+            self.fail("URL: %s failed for this reason: %s" % (url, str(e)))
+
+    def testNoEmbed(self):
         fetch_count = fetch.count
         for noembed in self.noembeds:
             self.assertEquals(replace(noembed), noembed)
-            self.assertEquals(replace(safe(noembed)), noembed)
-        self.assertEquals(fetch_count, fetch.count)
-    
+        self.assertEquals(fetch.count, fetch_count)
+
     def testEnd(self):
-        for text in (self.end, self.start, self.middle, self.trailing_comma, self.trailing_period):
-            for loc, embed in self.embeds:
+        for loc in self.locs:
+            embed =  self.get_oembed(loc)
+
+            if not embed or embed == loc:
+                self.fail("URL: %s did not produce an embed object" % loc)
+
+            for text in (self.end, self.start, self.middle, self.trailing_comma, self.trailing_period):
                 self.assertEquals(
                     replace(text % loc),
                     text % embed
                 )
-    
+
     def testManySameEmbeds(self):
-        for loc, embed in self.embeds:
-            text = " ".join([self.middle % loc] * 100) 
-            resp = " ".join([self.middle % embed] * 100)
-            self.assertEquals(replace(text), resp)
-        
-    def testAlreadyEmbedded(self):
-        for loc, embed in self.embeds:
-            self.assertEquals(replace(embed), embed)
-     
-    
-    
+        loc = self.locs[1]
+        embed =  self.get_oembed(loc)
+
+        text = " ".join([self.middle % loc] * 100)
+        resp = " ".join([self.middle % embed] * 100)
+        self.assertEquals(replace(text), resp)
