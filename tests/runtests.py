@@ -10,7 +10,7 @@ from django.test.simple import DjangoTestSuiteRunner
 
 if __name__ == "__main__":
     runner = DjangoTestSuiteRunner(verbosity=9)
-    failures = runner.run_tests(['oembed'])
+    failures = runner.run_tests(['oembed.OEmbedTests.testNoEmbed'])
     if failures:
         sys.exit(failures)
     # Reset the DJANGO_SETTINGS_MODULE to what it was before running tests.
